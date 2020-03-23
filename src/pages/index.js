@@ -1,38 +1,47 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { graphql } from 'gatsby'
 import get from 'lodash/get'
-import Helmet from 'react-helmet'
-import Hero from '../components/hero'
-import Layout from '../components/layout'
-import ArticlePreview from '../components/article-preview'
+import Helmet from 'react-helmet';
+import DefaultLayout from '../components/layouts/defaultLayout/defaultLayout';
+import '../assets/scss/style.scss';
+import BannerSection from '../components/blocks/bannerSection/bannerSection';
+import ContentSection from '../components/blocks/contentSection/contentSection';
+import TabSection from '../components/blocks/tabSection/tabSection';
+import CardSection from '../components/blocks/cardSection/cardSection';
+import BackgroundImageSection from '../components/blocks/backgroundImageSection/backgroundImageSection';
+import SliderSection from '../components/blocks/sliderSection/sliderSection';
+import JoinSection from '../components/blocks/joinSection/joinSection'
 
-class RootIndex extends React.Component {
-  render() {
-    const siteTitle = get(this, 'props.data.site.siteMetadata.title')
-    const posts = get(this, 'props.data.allContentfulBlogPost.edges')
-    const [author] = get(this, 'props.data.allContentfulPerson.edges')
-
-    return (
-      <Layout location={this.props.location}>
-        <div style={{ background: '#fff' }}>
-          <Helmet title={siteTitle} />
-          <Hero data={author.node} />
-          <div className="wrapper">
-            <h2 className="section-headline">Recent articles</h2>
-            <ul className="article-list">
-              {posts.map(({ node }) => {
-                return (
-                  <li key={node.slug}>
-                    <ArticlePreview article={node} />
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        </div>
-      </Layout>
-    )
-  }
+class RootIndex extends Component {
+	render() {
+		console.log(this.props.data)
+		const sectionDetails = this.props.data.allContentfulNavigation.edges[0].node.page.blocks;
+		const blocks = sectionDetails.map(detail => {
+			switch (detail.internal.type) {
+				case "ContentfulBannerSection":
+					return <BannerSection sectionDetail={detail} />
+				case "ContentfulContentSection":
+					return <ContentSection sectionDetail={detail} />;
+				case "ContentfulTabSection":
+					return <TabSection sectionDetail={detail} />;
+				case "ContentfulCardSection":
+					return <CardSection sectionDetail={detail} />;
+				case "ContentfulBackgroundImageSection":
+					return <BackgroundImageSection sectionDetail={detail} />;
+				case "ContentfulSliderSection":
+					return <SliderSection sectionDetail={detail} />;
+				case "ContentfulJoinSection":
+					return <JoinSection sectionDetail={detail} />;
+				default:
+					return detail;
+			}
+		})
+		return (
+			<DefaultLayout headerData={this.props.data.allContentfulLayout.edges[0].node.header} footerData={this.props.data.allContentfulLayout.edges[0].node.footer}>
+				{blocks}
+			</DefaultLayout>
+		)
+	}
 }
 
 export default RootIndex
@@ -43,49 +52,207 @@ export const pageQuery = graphql`
       siteMetadata {
         title
       }
-    }
-    allContentfulBlogPost(sort: { fields: [publishDate], order: DESC }) {
-      edges {
-        node {
-          title
-          slug
-          publishDate(formatString: "MMMM Do, YYYY")
-          tags
-          heroImage {
-            fluid(maxWidth: 350, maxHeight: 196, resizingBehavior: SCALE) {
-              ...GatsbyContentfulFluid_tracedSVG
-            }
-          }
-          description {
-            childMarkdownRemark {
-              html
-            }
-          }
-        }
-      }
-    }
-    allContentfulPerson(
-      filter: { contentful_id: { eq: "15jwOBqpxqSAOy2eOO4S0m" } }
-    ) {
-      edges {
-        node {
-          name
-          shortBio {
-            shortBio
-          }
-          title
-          heroImage: image {
-            fluid(
-              maxWidth: 1180
-              maxHeight: 480
-              resizingBehavior: PAD
-              background: "rgb:000000"
-            ) {
-              ...GatsbyContentfulFluid_tracedSVG
-            }
-          }
-        }
-      }
-    }
+	}
+	allContentfulLayout {
+		edges {
+		  node {
+			footer {
+			  logo {
+				file {
+				  url
+				}
+			  }
+			  navigationGroups {
+				title
+				navigation {
+				  ... on ContentfulNavigation {
+				  
+					title
+					url
+				  }
+				  ... on ContentfulSeconderyNavigation {
+				  
+					title
+					url
+				  }
+				}
+			  }
+			}
+			header {
+				rightNavigation {
+				  title
+				  url
+				}
+				navigationItems {
+				  title
+				  url
+				  extraClass
+				  navigationImage {
+						fluid {
+						src
+						}
+					}
+				  }
+				  logo {
+					file {
+					  url
+					}
+				  }
+			  }
+		  }
+		}
+	  }
+	  allContentfulNavigation(filter: {url: {eq: "/"}}) {
+		edges {
+		  node {
+			url
+			page {
+			  blocks {
+				... on ContentfulBannerSection {
+					id
+					internal {
+					  type
+					}
+					title
+					subtitle
+					logo {
+					  file {
+						url
+					  }
+					}
+					imageVideo {
+					  file {
+						url
+					  }
+					}
+				  }
+				  ... on ContentfulContentSection {
+					id
+					internal {
+					  type
+					}
+					content {
+						childMarkdownRemark {
+						  html
+						}
+					  }
+					  title
+					  sectionClass
+				  }
+				  ... on ContentfulTabSection {
+					id
+					internal {
+					  type
+					}
+					tabs {
+						title
+						image {
+						  file {
+							url
+						  }
+						}
+					  }
+				  }
+				  ... on ContentfulCardSection {
+					title
+					content {
+					  childMarkdownRemark {
+						html
+					  }
+					}
+					backgroundImage {
+					  file {
+						url
+					  }
+					}
+					cardImage {
+					  file {
+						url
+					  }
+					}
+					internal {
+					  type
+					}
+				  }
+				  ... on ContentfulBackgroundImageSection {
+					internal {
+					  type
+					}
+					id
+					title
+					textCenter
+					textTop
+					textBottom
+					backgroundImage {
+					  file {
+						url
+					  }
+					}
+					sectionLink {
+						title
+						url
+					  }
+					content {
+					  childMarkdownRemark {
+						html
+					  }
+					}
+				  }
+				  ... on ContentfulSliderSection {
+					internal {
+					  type
+					}
+					title
+					slides {
+					  title
+					  subTitle
+					  content {
+						childMarkdownRemark {
+						  html
+						}
+					  }
+					  image {
+						file {
+						  url
+						}
+					  }
+					  tag
+					  links {
+						title
+						url
+					  }
+					}
+				  }
+				  ... on ContentfulJoinSection {
+					internal {
+					  type
+					}
+					title
+					content {
+					  childMarkdownRemark {
+						html
+					  }
+					}
+					rightImage {
+					  file {
+						url
+					  }
+					}
+					leftImage {
+					  file {
+						url
+					  }
+					}
+					link {
+					  url
+					  title
+					}
+				  }
+				
+			  }
+			}
+		  }
+		}
+	  }
   }
 `
